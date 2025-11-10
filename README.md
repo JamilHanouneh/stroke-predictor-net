@@ -1,6 +1,14 @@
 # stroke-predictor-net
-A production-ready deep learning framework for predicting stroke lesion outcomes by integrating multi-sequence MRI imaging with clinical patient metadata through cross-attention mechanisms.
+![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
+![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
+![Platform](https://img.shields.io/badge/platform-linux%20%7C%20windows%20%7C%20macos-lightgrey)
+![Medical AI](https://img.shields.io/badge/medical-AI-purple.svg)
+![Deep Learning](https://img.shields.io/badge/deep%20learning-multimodal-orange.svg)
+![Status](https://img.shields.io/badge/status-active-success.svg)
+![Maintained](https://img.shields.io/badge/maintained-yes-brightgreen.svg)
 
+A production-ready deep learning framework for predicting stroke lesion outcomes by integrating multi-sequence MRI imaging with clinical patient metadata through cross-attention mechanisms.
 ---
 
 ## Overview
