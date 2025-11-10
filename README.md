@@ -92,7 +92,7 @@ Multi-head attention learns interactions between imaging patterns and clinical c
 
 ```
 # Clone repository
-git clone https://github.com/JamilHanouneh/StrokePredictorNet.git
+git clone https://github.com/JamilHanouneh/stroke-predictor-net.git
 cd StrokePredictorNet
 
 # Create virtual environment
@@ -255,7 +255,7 @@ If you use StrokePredictorNet in your research, please cite:
   author = {Hanouneh, Jamil},
   title = {StrokePredictorNet: Multimodal Deep Learning for Stroke Outcome Prediction},
   year = {2024},
-  url = {https://github.com/JamilHanouneh/StrokePredictorNet},
+  url = {https://github.com/JamilHanouneh/stroke-predictor-net},
   institution = {Friedrich-Alexander-Universität Erlangen-Nürnberg}
 }
 ```
