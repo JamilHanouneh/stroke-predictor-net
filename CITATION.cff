@@ -11,7 +11,7 @@ version: 1.0.0
 doi: ""
 date-released: 2024-11-10
 url: "https://github.com/JamilHanouneh/StrokePredictorNet"
-repository-code: "https://github.com/JamilHanouneh/StrokePredictorNet"
+repository-code: "https://github.com/JamilHanouneh/stroke-predictor-net"
 license: MIT
 keywords:
   - deep-learning
@@ -24,3 +24,4 @@ keywords:
   - neuroimaging
   - ischemic-stroke
   - lesion-segmentation
+
