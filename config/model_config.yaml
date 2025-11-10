@@ -1,0 +1,102 @@
+# Model Architecture Configuration
+# Separate file for easy architecture experimentation
+
+imaging_encoder:
+  backbone: "resnet3d18"  # Options: resnet3d18, resnet3d34, efficientnet3d
+  in_channels: 3  # FLAIR, DWI, ADC
+  feature_dim: 512
+  
+  # Channel progression
+  channels:
+    - 16   # Layer 1
+    - 32   # Layer 2
+    - 64   # Layer 3
+    - 128  # Layer 4
+  
+  # Regularization
+  dropout: 0.3
+  batch_norm: true
+  weight_decay: 0.0005
+  
+  # Advanced options
+  pretrained: false  # No medical imaging pretrained weights available
+  freeze_layers: 0   # Number of initial layers to freeze
+  use_se_blocks: false  # Squeeze-and-Excitation blocks
+
+clinical_encoder:
+  input_dim: 10  # Number of clinical features
+  
+  # MLP architecture
+  hidden_dims:
+    - 64
+    - 32
+  
+  output_dim: 128
+  
+  # Activation and regularization
+  activation: "relu"  # relu, gelu, elu
+  dropout: 0.2
+  batch_norm: true
+  layer_norm: false
+
+fusion:
+  method: "cross_attention"  # Options: cross_attention, concat, bilinear, film
+  
+  # Cross-attention specific
+  attention_dim: 256
+  attention_heads: 4
+  attention_dropout: 0.1
+  
+  # Alternative fusion methods (if method != cross_attention)
+  concat_projection_dim: 256  # For concat method
+  bilinear_dim: 256  # For bilinear method
+
+segmentation_head:
+  decoder_type: "unet"  # Options: unet, unet++, fpn
+  
+  # Decoder channel progression (upsampling)
+  decoder_channels:
+    - 256
+    - 128
+    - 64
+    - 32
+  
+  # Output
+  num_classes: 1  # Binary segmentation
+  final_activation: "sigmoid"  # sigmoid, softmax, none
+  
+  # Advanced decoder options
+  use_skip_connections: false  # Not applicable (no encoder skip)
+  use_deep_supervision: false  # Multiple output scales
+  use_attention_gates: false   # Attention gates in decoder
+
+loss:
+  segmentation:
+    type: "dice_ce"  # dice, ce, dice_ce, focal, tversky
+    
+    # Dice + CE weights
+    dice_weight: 0.7
+    ce_weight: 0.3
+    
+    # Loss-specific parameters
+    dice_smooth: 1.0
+    focal_alpha: 0.25  # For focal loss
+    focal_gamma: 2.0   # For focal loss
+    tversky_alpha: 0.5  # For Tversky loss
+    tversky_beta: 0.5   # For Tversky loss
+  
+  # Optional auxiliary losses
+  uncertainty:
+    enabled: false
+    method: "evidential"  # evidential, dropout
+    weight: 0.1
+  
+  feature_consistency:
+    enabled: false  # Consistency between modalities
+    weight: 0.05
+
+# Model ensembling (optional)
+ensemble:
+  enabled: false
+  num_models: 5
+  strategy: "average"  # average, voting, stacking

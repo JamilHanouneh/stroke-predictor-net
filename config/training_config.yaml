@@ -1,0 +1,184 @@
+# Training Hyperparameters Configuration
+# Separate file for easy hyperparameter tuning
+
+training:
+  # Epochs and batch size
+  num_epochs: 100
+  
+  batch_size:
+    gpu: 8
+    cpu: 2
+  
+  # Gradient settings
+  gradient_accumulation_steps:
+    gpu: 1
+    cpu: 4
+  
+  gradient_clipping:
+    enabled: true
+    max_norm: 1.0
+  
+  # Optimization
+  optimizer:
+    type: "adamw"  # adam, adamw, sgd, radam
+    learning_rate: 0.001
+    
+    # Adam/AdamW specific
+    betas: [0.9, 0.999]
+    eps: 1.0e-08
+    weight_decay: 0.0005
+    amsgrad: false
+    
+    # SGD specific
+    momentum: 0.9
+    nesterov: true
+  
+  # Learning rate scheduling
+  scheduler:
+    type: "cosine"  # cosine, step, plateau, exponential, onecycle
+    
+    # Warmup
+    warmup_epochs: 5
+    warmup_start_lr: 1.0e-06
+    
+    # Cosine specific
+    min_lr: 1.0e-06
+    T_max: 100
+    
+    # Step specific
+    step_size: 30
+    gamma: 0.1
+    
+    # Plateau specific
+    mode: "min"
+    factor: 0.5
+    patience: 10
+    threshold: 0.0001
+  
+  # Mixed precision training
+  mixed_precision:
+    enabled: true  # Only effective on GPU with Tensor Cores
+    opt_level: "O1"  # O0, O1, O2, O3
+    loss_scale: "dynamic"
+  
+  # Checkpointing
+  checkpointing:
+    save_every_n_epochs: 5
+    save_best_only: false
+    keep_last_n: 5  # Keep only last N checkpoints
+    monitor: "val_dice"
+    mode: "max"
+  
+  # Early stopping
+  early_stopping:
+    enabled: true
+    patience: 20
+    min_delta: 0.001
+    monitor: "val_dice"
+    mode: "max"
+    restore_best_weights: true
+  
+  # Validation
+  validation:
+    val_every_n_epochs: 1
+    compute_metrics: true
+    save_predictions: false  # Save val predictions for visualization
+
+# Data augmentation
+augmentation:
+  enabled: true
+  probability: 0.8  # Probability of applying augmentation
+  
+  # Spatial augmentations
+  spatial:
+    random_flip:
+      enabled: true
+      probability: 0.5
+      axes: [0, 1, 2]  # x, y, z
+    
+    random_rotation:
+      enabled: true
+      probability: 0.3
+      rotation_range: [-10, 10]  # degrees
+      axes: [[0, 1], [0, 2], [1, 2]]
+    
+    random_affine:
+      enabled: true
+      probability: 0.3
+      translation_range: [-0.1, 0.1]  # fraction of image size
+      scale_range: [0.9, 1.1]
+      shear_range: [-0.1, 0.1]
+    
+    elastic_deformation:
+      enabled: true
+      probability: 0.2
+      alpha: [0, 900]
+      sigma: [9, 13]
+      mode: "nearest"
+  
+  # Intensity augmentations
+  intensity:
+    random_gamma:
+      enabled: true
+      probability: 0.3
+      gamma_range: [0.7, 1.5]
+      retain_stats: true
+    
+    random_noise:
+      enabled: true
+      probability: 0.2
+      noise_type: "gaussian"  # gaussian, rician
+      noise_std: 0.1
+    
+    random_bias_field:
+      enabled: true
+      probability: 0.2
+      coefficients: 0.5
+    
+    random_blur:
+      enabled: true
+      probability: 0.2
+      sigma_range: [0.5, 1.5]
+    
+    random_brightness:
+      enabled: true
+      probability: 0.3
+      brightness_range: [-0.2, 0.2]
+    
+    random_contrast:
+      enabled: true
+      probability: 0.3
+      contrast_range: [0.8, 1.2]
+
+# Regularization techniques
+regularization:
+  # Dropout
+  dropout:
+    enabled: true
+    rate: 0.3
+    spatial_dropout: false
+  
+  # Batch normalization
+  batch_norm:
+    enabled: true
+    momentum: 0.1
+    eps: 1.0e-05
+  
+  # Weight decay
+  weight_decay: 0.0005
+  
+  # Label smoothing
+  label_smoothing:
+    enabled: false
+    smoothing: 0.1
+  
+  # Cutout/MixUp (advanced)
+  cutout:
+    enabled: false
+    probability: 0.5
+    n_holes: 3
+    length: 16
+  
+  mixup:
+    enabled: false
+    alpha: 0.4

@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: "Hanouneh"
+    given-names: "Jamil"
+    email: "jamil.hanouneh1997@gmail.com"
+    affiliation: "Friedrich-Alexander-Universität Erlangen-Nürnberg"
+    orcid: ""
+title: "StrokePredictorNet: Multimodal Deep Learning for Stroke Outcome Prediction"
+version: 1.0.0
+doi: ""
+date-released: 2024-11-10
+url: "https://github.com/JamilHanouneh/StrokePredictorNet"
+repository-code: "https://github.com/JamilHanouneh/StrokePredictorNet"
+license: MIT
+keywords:
+  - deep-learning
+  - medical-imaging
+  - stroke-prediction
+  - multimodal-learning
+  - cross-attention
+  - pytorch
+  - medical-ai
+  - neuroimaging
+  - ischemic-stroke
+  - lesion-segmentation

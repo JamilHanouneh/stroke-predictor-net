@@ -1,0 +1,143 @@
+# Data Processing Configuration
+# Separate file for data-specific settings
+
+dataset:
+  name: "ISLES2022"
+  version: "1.0"
+  description: "Ischemic Stroke Lesion Segmentation Challenge 2022"
+
+paths:
+  raw_data: "data/raw/ISLES2022"
+  processed_data: "data/processed"
+  clinical_metadata: "data/synthetic/synthetic_clinical.csv"
+  splits: "data/splits"
+  cache: "data/.cache"
+
+modalities:
+  - "FLAIR"
+  - "DWI"
+  - "ADC"
+
+preprocessing:
+  # Spatial resampling
+  target_shape: [128, 128, 128]
+  target_spacing: [1.0, 1.0, 1.0]  # mm
+  interpolation: "linear"  # linear, nearest, cubic
+  
+  # Intensity preprocessing
+  normalize: true
+  normalization_method: "z_score"  # z_score, min_max, percentile
+  intensity_clip_percentiles: [1, 99]
+  
+  # Skull stripping
+  skull_strip: false
+  skull_strip_method: "bet"  # bet, ants, deepbrain
+  
+  # Bias field correction
+  bias_correction: false
+  bias_correction_method: "n4"  # n4, ants
+  
+  # Registration (optional)
+  register_to_atlas: false
+  atlas_template: "mni152"
+  registration_method: "ants"  # ants, fsl
+  
+  # Background removal
+  remove_background: true
+  background_threshold: 0
+  
+  # Mask processing
+  binary_threshold: 0.5
+  remove_small_lesions: false
+  min_lesion_size: 10  # voxels
+
+data_splits:
+  train: 0.70
+  val: 0.15
+  test: 0.15
+  
+  # Stratification
+  stratify_by: "lesion_volume"  # lesion_volume, nihss_score, random
+  
+  # Cross-validation
+  cross_validation:
+    enabled: false
+    n_folds: 5
+    shuffle: true
+
+clinical_features:
+  # Demographics
+  - name: "age"
+    type: "continuous"
+    normalization: "z_score"
+    range: [0, 100]
+  
+  - name: "sex"
+    type: "binary"
+    encoding: "one_hot"  # one_hot, label
+  
+  # Stroke severity
+  - name: "nihss_score"
+    type: "continuous"
+    normalization: "min_max"
+    range: [0, 42]
+  
+  # Timing
+  - name: "time_to_scan"
+    type: "continuous"
+    normalization: "log"
+    range: [0, 1440]  # minutes
+  
+  # Vital signs
+  - name: "systolic_bp"
+    type: "continuous"
+    normalization: "z_score"
+    range: [70, 250]
+  
+  - name: "diastolic_bp"
+    type: "continuous"
+    normalization: "z_score"
+    range: [40, 150]
+  
+  # Lab values
+  - name: "glucose"
+    type: "continuous"
+    normalization: "z_score"
+    range: [50, 500]
+  
+  # Medical history (binary)
+  - name: "prior_stroke"
+    type: "binary"
+    encoding: "label"
+  
+  - name: "diabetes"
+    type: "binary"
+    encoding: "label"
+  
+  - name: "hypertension"
+    type: "binary"
+    encoding: "label"
+
+# Data loading
+dataloader:
+  num_workers: 4
+  pin_memory: true
+  prefetch_factor: 2
+  persistent_workers: true
+  
+  # Caching
+  cache_data: false
+  cache_rate: 0.0  # Fraction of data to cache in RAM
+
+# Quality control
+quality_control:
+  enabled: true
+  
+  checks:
+    - check_image_dimensions
+    - check_intensity_range
+    - check_lesion_presence
+    - check_clinical_completeness
+  
+  exclude_on_failure: true
+  save_report: true

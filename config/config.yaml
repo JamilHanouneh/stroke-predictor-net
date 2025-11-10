@@ -1,0 +1,243 @@
+# StrokePredictorNet Configuration
+# Multimodal Stroke Lesion Outcome Prediction
+
+project:
+  name: "StrokePredictorNet"
+  version: "1.0.0"
+  author: "Jamil Hanouneh"
+  description: "Multimodal deep learning for stroke outcome prediction"
+
+# ============================================================
+# SYSTEM CONFIGURATION
+# ============================================================
+system:
+  device: "auto"  # Options: "auto", "cpu", "cuda"
+  mixed_precision: true  # Use automatic mixed precision (GPU only)
+  num_workers: "auto"  # DataLoader workers (auto-detect based on device)
+  pin_memory: true  # Pin memory for GPU
+  seed: 42  # Random seed for reproducibility
+  deterministic: true  # Deterministic operations (reproducibility)
+
+# ============================================================
+# DATA CONFIGURATION
+# ============================================================
+data:
+  dataset: "ISLES2022"
+  
+  paths:
+    raw_data: "data/raw/ISLES2022"
+    processed_data: "data/processed"
+    clinical_metadata: "data/synthetic/synthetic_clinical.csv"
+    splits: "data/splits"
+  
+  modalities:
+    - "FLAIR"   
+    - "dwi"     
+    - "adc"     
+  
+  preprocessing:
+    target_shape: [128, 128, 128]  # Resample to this size
+    target_spacing: [1.0, 1.0, 1.0]  # Voxel spacing in mm
+    normalize: true  # Z-score normalization
+    skull_strip: false  # Skull stripping (optional)
+    intensity_clip_percentiles: [1, 99]  # Clip outliers
+  
+  splits:
+    train: 0.70
+    val: 0.15
+    test: 0.15
+    stratify_by: "lesion_volume"  # Stratify splits by lesion size
+  
+  clinical_features:
+    - "age"
+    - "sex"
+    - "nihss_score"  # Stroke severity (0-42)
+    - "time_to_scan"  # Minutes since symptom onset
+    - "systolic_bp"
+    - "diastolic_bp"
+    - "glucose"
+    - "prior_stroke"  # Binary
+    - "diabetes"  # Binary
+    - "hypertension"  # Binary
+
+# ============================================================
+# MODEL CONFIGURATION
+# ============================================================
+model:
+  architecture: "MultimodalFusionNet"
+  
+  imaging_encoder:
+    backbone: "resnet3d18"  # Options: resnet3d18, resnet3d34, efficientnet3d
+    in_channels: 3  # Number of MRI modalities
+    pretrained: false  # No medical pretrained weights available
+    feature_dim: 512  # Output feature dimension
+    dropout: 0.3
+  
+  clinical_encoder:
+    input_dim: 10  # Number of clinical features
+    hidden_dims: [64, 32]  # MLP hidden layers
+    output_dim: 128  # Clinical feature dimension
+    activation: "relu"
+    dropout: 0.2
+    batch_norm: true
+  
+  fusion:
+    method: "cross_attention"  # Options: cross_attention, concat, bilinear
+    attention_heads: 4
+    attention_dim: 256
+    dropout: 0.1
+  
+  segmentation_head:
+    decoder_type: "unet"  # U-Net style decoder
+    decoder_channels: [256, 128, 64, 32]
+    num_classes: 1  # Binary segmentation (lesion vs. background)
+    final_activation: "sigmoid"
+  
+  loss:
+    segmentation:
+      type: "dice_ce"  # Combined Dice + Cross-Entropy
+      dice_weight: 0.7
+      ce_weight: 0.3
+    
+    uncertainty:
+      enabled: false  # Uncertainty quantification (future)
+      weight: 0.0
+
+# ============================================================
+# TRAINING CONFIGURATION
+# ============================================================
+training:
+  # Batch sizes (adjusted based on device)
+  batch_size:
+    gpu: 8
+    cpu: 2
+  
+  # Gradient accumulation (simulate larger batch on CPU)
+  gradient_accumulation_steps:
+    gpu: 1
+    cpu: 4
+  
+  num_epochs: 100
+  learning_rate: 0.001
+  weight_decay: 0.0005
+  
+  optimizer:
+    type: "adamw"  # Options: adam, adamw, sgd
+    betas: [0.9, 0.999]
+    eps: 1.0e-08
+  
+  scheduler:
+    type: "cosine"  # Options: cosine, step, plateau
+    warmup_epochs: 5
+    min_lr: 1.0e-06
+  
+  early_stopping:
+    enabled: true
+    patience: 20  # Stop if no improvement for 20 epochs
+    min_delta: 0.001  # Minimum change to qualify as improvement
+    monitor: "val_dice"  # Metric to monitor
+    mode: "max"  # Maximize Dice score
+  
+  checkpointing:
+    save_every_n_epochs: 5
+    save_best_only: false  # Also save intermediate checkpoints
+    monitor: "val_dice"
+    mode: "max"
+  
+  validation:
+    val_every_n_epochs: 1
+    compute_metrics: true
+
+# ============================================================
+# AUGMENTATION CONFIGURATION
+# ============================================================
+augmentation:
+  enabled: true
+  
+  spatial:
+    random_flip:
+      probability: 0.5
+      axes: [0, 1, 2]
+    
+    random_affine:
+      probability: 0.3
+      rotation_range: [-10, 10]  # degrees
+      translation_range: [-0.1, 0.1]  # fraction of image size
+      scale_range: [0.9, 1.1]
+    
+    elastic_deformation:
+      probability: 0.2
+      alpha: [0, 900]
+      sigma: [9, 13]
+  
+  intensity:
+    random_gamma:
+      probability: 0.3
+      gamma_range: [0.7, 1.5]
+    
+    random_noise:
+      probability: 0.2
+      noise_std: 0.1
+    
+    random_bias_field:
+      probability: 0.2
+      coefficients: 0.5
+
+# ============================================================
+# EVALUATION CONFIGURATION
+# ============================================================
+evaluation:
+  metrics:
+    - "dice"
+    - "iou"
+    - "sensitivity"
+    - "specificity"
+    - "hausdorff_95"  # 95th percentile Hausdorff distance
+    - "volume_similarity"
+  
+  uncertainty:
+    enabled: false  # MC dropout for uncertainty (future)
+    num_samples: 10
+  
+  post_processing:
+    remove_small_components: true
+    min_component_size: 100  # voxels
+    fill_holes: true
+
+# ============================================================
+# LOGGING CONFIGURATION
+# ============================================================
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  log_file: "outputs/logs/training.log"
+  tensorboard:
+    enabled: true
+    log_dir: "outputs/logs/tensorboard"
+  wandb:
+    enabled: false  # Weights & Biases (optional)
+    project: "StrokePredictorNet"
+    entity: "your-username"
+
+# ============================================================
+# INFERENCE CONFIGURATION
+# ============================================================
+inference:
+  batch_size: 1  # Process one subject at a time
+  tta:  # Test-time augmentation
+    enabled: false
+    num_augmentations: 5
+  
+  output_format: "nifti"  # Options: nifti, numpy
+  save_probability_maps: true
+  save_binary_masks: true
+  overlay_on_input: true
+
+# ============================================================
+# PATHS CONFIGURATION
+# ============================================================
+paths:
+  checkpoints: "outputs/checkpoints"
+  logs: "outputs/logs"
+  predictions: "outputs/predictions"
+  figures: "outputs/figures"
+  cache: "data/.cache"
